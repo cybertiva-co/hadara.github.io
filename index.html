@@ -1119,10 +1119,10 @@
     <div class="seller-nav">
         <div class="container">
             <div class="seller-nav-content">
-                <button class="nav-btn active" onclick="switchView('detal')">🛍️ Detal</button>
-                <button class="nav-btn" onclick="switchView('mayor')">📦 Mayorista</button>
-                <button class="nav-btn" onclick="switchView('bodega')">⚙️ Bodega</button>
-                <button class="nav-btn admin-only" onclick="switchView('admin')" style="display: none; background: var(--danger); border-color: var(--danger);">
+                <button class="nav-btn active" data-view="detal" onclick="switchView('detal', this)">🛍️ Detal</button>
+                <button class="nav-btn" data-view="mayor" onclick="switchView('mayor', this)">📦 Mayorista</button>
+                <button class="nav-btn" data-view="bodega" onclick="switchView('bodega', this)">⚙️ Bodega</button>
+                <button class="nav-btn admin-only" data-view="admin" onclick="switchView('admin', this)" style="display: none; background: var(--danger); border-color: var(--danger);">
                     👑 Admin
                 </button>
             </div>
@@ -1292,8 +1292,8 @@
             <h2 style="margin-bottom: 1.5rem; text-align: center; font-family: 'Cinzel', serif; color: var(--secondary);">🔐 Acceso al Sistema</h2>
             
             <div class="login-tabs">
-                <button class="login-tab active" onclick="switchLoginTab('seller')">👤 Vendedor</button>
-                <button class="login-tab" onclick="switchLoginTab('admin')">👑 Administrador</button>
+                <button class="login-tab active" onclick="switchLoginTab('seller', this)">👤 Vendedor</button>
+                <button class="login-tab" onclick="switchLoginTab('admin', this)">👑 Administrador</button>
             </div>
 
             <form id="loginSeller" class="login-form active" onsubmit="event.preventDefault(); login('seller');">
@@ -1772,11 +1772,12 @@
         }
 
         // Navegación
-        function switchView(view) {
+        function switchView(view, triggerBtn = null) {
             currentView = view;
             
             document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            const activeBtn = triggerBtn || document.querySelector(`.nav-btn[data-view="${view}"]`);
+            if (activeBtn) activeBtn.classList.add('active');
             
             document.getElementById('catalogDetal').style.display = view === 'detal' ? 'grid' : 'none';
             document.getElementById('catalogMayor').style.display = view === 'mayor' ? 'grid' : 'none';
@@ -1818,10 +1819,10 @@
             document.getElementById('adminPass').value = '';
         }
 
-        function switchLoginTab(type) {
+        function switchLoginTab(type, triggerBtn = null) {
             document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.login-form').forEach(f => f.classList.remove('active'));
-            event.target.classList.add('active');
+            if (triggerBtn) triggerBtn.classList.add('active');
             document.getElementById(type === 'admin' ? 'loginAdmin' : 'loginSeller').classList.add('active');
         }
 
@@ -1901,13 +1902,13 @@
         }
 
         function saveNewReference() {
-            const name = document.getElementById('refName').value;
+            const name = document.getElementById('refName').value.trim();
             const category = document.getElementById('refCategory').value;
             const image = document.getElementById('refImage').value;
             const description = document.getElementById('refDesc').value;
             const price = parseFloat(document.getElementById('refPrice').value);
 
-            if (!name || !image || !price) {
+            if (!name || !image || !Number.isFinite(price) || price <= 0) {
                 alert('Completa los campos obligatorios');
                 return;
             }
@@ -1936,6 +1937,10 @@
 
         function savePrice(id) {
             const newPrice = parseFloat(document.getElementById(`price-${id}`).value);
+            if (!Number.isFinite(newPrice) || newPrice <= 0) {
+                alert('Ingresa un precio válido mayor a 0');
+                return;
+            }
             const product = products.find(p => p.id === id);
             if (product) {
                 product.priceBodega = newPrice;
